@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Steadfast Mortgage — Scenario Calculator</title>
+
+<!-- PWA hooks -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1419">
+<meta name="application-name" content="Steadfast">
+
+<!-- iOS PWA meta tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Steadfast">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1419;
+    --ink-soft: #2a3038;
+    --muted: #6b7280;
+    --line: #d9d6cf;
+    --line-soft: #ebe8e1;
+    --paper: #faf8f3;
+    --paper-warm: #f3efe6;
+    --accent: #6a8a82;
+    --accent-deep: #4d6b64;
+    --gold: #b08a3e;
+    --danger: #b04040;
+    --success: #4d6b64;
+    --shadow: 0 1px 3px rgba(15,20,25,.06), 0 12px 32px -8px rgba(15,20,25,.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter Tight', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse 1200px 600px at 50% -200px, rgba(106,138,130,.08), transparent 70%),
+      radial-gradient(ellipse 900px 500px at 100% 100%, rgba(176,138,62,.05), transparent 70%),
+      var(--paper);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 40px 44px 40px;
+    position: relative;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 32px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .logo-wrap img { height: 54px; width: auto; display: block; }
+  .header-meta {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.7;
+  }
+  .header-meta .stamp { color: var(--ink); font-weight: 500; }
+
+  .intro { margin-bottom: 28px; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+  h1 em { font-style: italic; color: var(--accent-deep); font-weight: 500; }
+  .subtitle { font-size: 14px; color: var(--muted); max-width: 720px; }
+
+  .mode-toggle {
+    display: inline-flex;
+    background: var(--paper-warm);
+    border: 1px solid var(--line);
+    padding: 4px;
+    margin-bottom: 22px;
+    gap: 2px;
+  }
+  .mode-toggle button {
+    background: transparent;
+    border: none;
+    padding: 9px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .mode-toggle button.active { background: var(--ink); color: #fff; }
+  .mode-toggle button:not(.active):hover { color: var(--ink); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .inputs {
+    background: var(--paper-warm);
+    border: 1px solid var(--line);
+    padding: 26px 26px 22px;
+    position: sticky;
+    top: 20px;
+  }
+
+  .panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-divider {
+    margin: 18px 0 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+  }
+
+  .field { margin-bottom: 16px; }
+
+  .field label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field .hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-style: italic;
+  }
+
+  .field input[type="text"],
+  .field input[type="number"],
+  .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: 'Inter Tight', sans-serif;
+    font-size: 16px;
+    color: var(--ink);
+    transition: border-color .2s ease;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+  .field select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='none' stroke='%236b7280' stroke-width='1.5' d='M1 1l5 5 5-5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .field .input-prefix, .field .input-suffix { position: relative; }
+  .field .input-prefix input { padding-left: 24px; }
+  .field .input-prefix::before {
+    content: "$";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  .field .input-suffix input { padding-right: 28px; }
+  .field .input-suffix::after {
+    content: attr(data-suffix);
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  details.advanced {
+    margin-top: 6px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+  details.advanced summary {
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    margin-bottom: 14px;
+    user-select: none;
+    list-style: none;
+  }
+  details.advanced summary::-webkit-details-marker { display: none; }
+  details.advanced summary::before { content: "+ "; font-weight: 600; }
+  details.advanced[open] summary::before { content: "− "; }
+
+  .results { min-height: 400px; }
+
+  .result-mode-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .hero {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent);
+    padding: 28px 32px 24px;
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 32px;
+  }
+  .hero-left .lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .hero-left .amt {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 56px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .hero-left .amt .pre {
+    font-size: 28px;
+    vertical-align: top;
+    color: var(--muted);
+    font-weight: 500;
+    margin-right: 4px;
+    position: relative;
+    top: 8px;
+  }
+  .hero-right { text-align: right; }
+  .hero-right .small-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .hero-right .small-amt {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--accent-deep);
+    line-height: 1.1;
+  }
+  .hero-right .status {
+    margin-top: 8px;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--success);
+  }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .pcard {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 20px 20px 18px;
+    position: relative;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .pcard.active {
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px -8px rgba(106,138,130,.3);
+    transform: translateY(-2px);
+  }
+  .pcard::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 28px; height: 2px;
+  }
+  .pcard.conv::before { background: var(--ink); }
+  .pcard.fha::before  { background: var(--accent); }
+  .pcard.va::before   { background: var(--gold); }
+
+  .pcard .ptag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .pcard .pname {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .pcard .pterm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .pcard .pamt-block {
+    padding: 12px 0;
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    margin-bottom: 12px;
+  }
+  .pcard .pamt-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .pcard .pamt {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .pcard .pamt .pre {
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-right: 2px;
+    position: relative;
+    top: 3px;
+  }
+
+  .pbreakdown {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    row-gap: 6px;
+    font-size: 12px;
+  }
+  .pbreakdown .lbl { color: var(--muted); }
+  .pbreakdown .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .pbreakdown .val.muted { color: var(--muted); }
+  .pbreakdown hr {
+    grid-column: 1 / -1;
+    border: none;
+    border-top: 1px dashed var(--line);
+    margin: 4px 0;
+  }
+  .pbreakdown .total-lbl {
+    font-weight: 600;
+    color: var(--ink);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    align-self: center;
+  }
+  .pbreakdown .total-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--accent-deep);
+  }
+  .pbreakdown .total-val.over { color: var(--danger); }
+
+  .city-info {
+    margin-top: 4px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px dashed var(--line);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .city-info .ci-rate {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-deep);
+    font-weight: 500;
+  }
+
+  .disclaimer {
+    margin-top: 28px;
+    padding: 18px 22px;
+    background: var(--paper-warm);
+    border-left: 3px solid var(--accent);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .disclaimer strong { color: var(--ink); }
+
+  footer {
+    margin-top: 36px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 32px;
+  }
+  .sig-wrap img {
+    max-width: 420px;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .footer-right {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .footer-right .stamp-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--accent-deep);
+    text-transform: none;
+    letter-spacing: 0;
+    margin-bottom: 6px;
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; border: none; padding: 24px; }
+    .inputs { position: static; }
+    .mode-toggle { display: none; }
+  }
+
+  @media (max-width: 1024px) {
+    .layout { grid-template-columns: 1fr; }
+    .inputs { position: static; }
+    .comparison { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .page { padding: 24px 18px; }
+    h1 { font-size: 28px; }
+    header { grid-template-columns: 1fr; }
+    .header-meta { text-align: left; }
+    .hero { grid-template-columns: 1fr; gap: 12px; }
+    .hero-right { text-align: left; }
+    .hero-left .amt { font-size: 42px; }
+    footer { grid-template-columns: 1fr; }
+    .footer-right { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Steadfast Mortgage">
+    </div>
+    <div class="header-meta">
+      <div class="stamp">Scenario Calculator</div>
+      <div>Clarksville-Area Markets</div>
+      <div>30-Yr Fixed</div>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div class="eyebrow">Realtor Tool · Live Scenarios</div>
+    <h1>Run the numbers <em>in real time</em></h1>
+    <p class="subtitle">Pick a market, enter the buyer's parameters, and the three loan products update instantly. Toggle between solving for the maximum purchase price at a target payment, or solving for the monthly payment at a given purchase price.</p>
+  </section>
+
+  <div class="mode-toggle" role="tablist">
+    <button id="mode-piti" class="active">Solve for Max Price</button>
+    <button id="mode-price">Solve for Payment</button>
+  </div>
+
+  <div class="layout">
+
+    <aside class="inputs">
+      <div class="panel-title">Buyer Inputs</div>
+
+      <div class="field">
+        <label for="citySelect">Market / Location</label>
+        <select id="citySelect"></select>
+        <div class="city-info" id="cityInfo"></div>
+      </div>
+
+      <div class="field" id="field-piti">
+        <label for="targetPiti">Target Monthly Payment (PITI)</label>
+        <div class="input-prefix">
+          <input type="text" id="targetPiti" value="2,400" inputmode="decimal">
+        </div>
+        <div class="hint">Maximum total monthly payment</div>
+      </div>
+
+      <div class="field" id="field-price" style="display:none;">
+        <label for="purchasePrice">Purchase Price</label>
+        <div class="input-prefix">
+          <input type="text" id="purchasePrice" value="350,000" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="convDown">Conv Down Pmt</label>
+          <div class="input-suffix" data-suffix="%">
+            <input type="text" id="convDown" value="20" inputmode="decimal">
+          </div>
+        </div>
+        <div class="field">
+          <label for="fhaDown">FHA Down Pmt</label>
+          <div class="input-suffix" data-suffix="%">
+            <input type="text" id="fhaDown" value="3.5" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="vaDown">VA Down Pmt</label>
+          <div class="input-suffix" data-suffix="%">
+            <input type="text" id="vaDown" value="0" inputmode="decimal">
+          </div>
+        </div>
+        <div class="field">
+          <label for="vaFeeSelect">VA Funding Fee</label>
+          <select id="vaFeeSelect">
+            <option value="2.15">2.15% — First use, &lt;5% down</option>
+            <option value="1.50">1.50% — 5–9.99% down</option>
+            <option value="1.25">1.25% — 10%+ down</option>
+            <option value="3.30">3.30% — Subsequent use, &lt;5% down</option>
+            <option value="0">Exempt (no funding fee)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="hoiMonthly">Homeowners Insurance (monthly)</label>
+        <div class="input-prefix">
+          <input type="text" id="hoiMonthly" value="150" inputmode="decimal">
+        </div>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced settings</summary>
+
+        <div class="row-2">
+          <div class="field">
+            <label for="convPmi">Conv PMI (if &lt; 20% dn)</label>
+            <div class="input-suffix" data-suffix="%">
+              <input type="text" id="convPmi" value="0.40" inputmode="decimal">
+            </div>
+          </div>
+          <div class="field">
+            <label for="fhaMip">FHA Annual MIP</label>
+            <div class="input-suffix" data-suffix="%">
+              <input type="text" id="fhaMip" value="0.55" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fhaUfmip">FHA UFMIP (financed)</label>
+          <div class="input-suffix" data-suffix="%">
+            <input type="text" id="fhaUfmip" value="1.75" inputmode="decimal">
+          </div>
+        </div>
+        <div class="hint" style="margin-top:-6px;">Property tax rates set by city selection.</div>
+      </details>
+    </aside>
+
+    <section class="results">
+
+      <div class="result-mode-label" id="resultLabel">Maximum Purchase Price by Loan Type</div>
+
+      <div class="hero">
+        <div class="hero-left">
+          <div class="lbl" id="heroLbl">Highest Buying Power</div>
+          <div class="amt"><span class="pre">$</span><span id="heroAmt">—</span></div>
+        </div>
+        <div class="hero-right">
+          <div class="small-lbl" id="heroRightLbl">at target PITI</div>
+          <div class="small-amt" id="heroRightAmt">—</div>
+          <div class="status" id="heroStatus">—</div>
+        </div>
+      </div>
+
+      <div class="comparison">
+
+        <article class="pcard conv" id="card-conv">
+          <div class="ptag">Conventional</div>
+          <div class="pname">Conventional</div>
+          <div class="pterm">30-yr fixed · current pricing on file</div>
+          <div class="pamt-block">
+            <div class="pamt-lbl" id="convAmtLbl">Max Purchase Price</div>
+            <div class="pamt"><span class="pre">$</span><span id="convAmt">—</span></div>
+          </div>
+          <div class="pbreakdown" id="convBreakdown"></div>
+        </article>
+
+        <article class="pcard fha" id="card-fha">
+          <div class="ptag">FHA</div>
+          <div class="pname">FHA</div>
+          <div class="pterm">30-yr fixed · current pricing on file</div>
+          <div class="pamt-block">
+            <div class="pamt-lbl" id="fhaAmtLbl">Max Purchase Price</div>
+            <div class="pamt"><span class="pre">$</span><span id="fhaAmt">—</span></div>
+          </div>
+          <div class="pbreakdown" id="fhaBreakdown"></div>
+        </article>
+
+        <article class="pcard va" id="card-va">
+          <div class="ptag">VA</div>
+          <div class="pname">VA</div>
+          <div class="pterm">30-yr fixed · current pricing on file</div>
+          <div class="pamt-block">
+            <div class="pamt-lbl" id="vaAmtLbl">Max Purchase Price</div>
+            <div class="pamt"><span class="pre">$</span><span id="vaAmt">—</span></div>
+          </div>
+          <div class="pbreakdown" id="vaBreakdown"></div>
+        </article>
+
+      </div>
+
+      <div class="disclaimer">
+        <strong>For estimating purposes only.</strong> Numbers reflect the inputs above and do not constitute a loan offer. Rates used in this calculator are based on current pricing on file with Steadfast Mortgage and are subject to change. Property tax estimates use median effective rates for each market — actual amounts vary by parcel and any applicable exemptions. Insurance estimates vary by carrier, roof age, and coverage. Final approval depends on credit, income, assets, and property qualification. Contact your loan officer for a personalized quote and exact figures.
+      </div>
+
+    </section>
+  </div>
+
+  <footer>
+    <div class="sig-wrap">
+      <img src="data:image/jpeg;base64,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" alt="Matt McWhirter — Steadfast Mortgage">
+    </div>
+    <div class="footer-right">
+      <div class="stamp-line">Built for our partner agents</div>
+      <div>Steadfast Mortgage</div>
+      <div>NMLS# 1131833</div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function() {
+  // RATES — update here when pricing changes
+  var RATES = {
+    conv: 0.06750,
+    fha:  0.06250,
+    va:   0.06250
+  };
+
+  var CITIES = [
+    { id: 'clarksville_city',   name: 'Clarksville, TN — In-city',                  taxRate: 0.0076,  note: 'Combined city + Montgomery County rate (≈ $3.02 per $100 of assessed value, residential assessed at 25% of appraised).' },
+    { id: 'clarksville_county', name: 'Clarksville, TN — County only (outside city)', taxRate: 0.00525, note: 'Montgomery County only (≈ $2.10 per $100 of assessed value, residential assessed at 25% of appraised).' },
+    { id: 'oak_grove',          name: 'Oak Grove, KY (Christian County)',           taxRate: 0.0086,  note: 'Christian County + City of Oak Grove combined effective rate. KY assesses at 100% of fair cash value.' },
+    { id: 'hopkinsville',       name: 'Hopkinsville, KY (Christian County)',        taxRate: 0.0076,  note: 'Christian County + City of Hopkinsville (city rate ≈ $0.202 per $100). KY assesses at 100% of fair cash value.' },
+    { id: 'fort_campbell',      name: 'Fort Campbell area (off-base civilian housing)', taxRate: 0.0076, note: 'Most Fort Campbell families purchase nearby in Clarksville or Oak Grove. Defaulted to Clarksville in-city rate; adjust based on actual property location.' },
+    { id: 'cheatham',           name: 'Pleasant View / Ashland City, TN (Cheatham County)', taxRate: 0.0067, note: 'Cheatham County effective rate. Properties inside Ashland City may carry a small additional city rate.' },
+    { id: 'stewart',            name: 'Dover / Stewart County, TN',                 taxRate: 0.0055,  note: 'Stewart County effective rate — among the lower property tax counties in the Clarksville-area trade zone.' },
+    { id: 'robertson',          name: 'Springfield / Robertson County, TN',         taxRate: 0.0062,  note: 'Robertson County effective rate. Inside Springfield city limits adds a small city rate.' },
+    { id: 'custom',             name: 'Custom rate (enter manually)',               taxRate: 0.0076,  custom: true, note: 'Enter a custom effective tax rate as % of purchase price.' }
+  ];
+
+  var $ = function(id) { return document.getElementById(id); };
+
+  function num(s) {
+    if (typeof s === 'number') return s;
+    if (!s) return 0;
+    return parseFloat(String(s).replace(/[^0-9.\-]/g, '')) || 0;
+  }
+  function fmt(n) {
+    if (!isFinite(n)) return '—';
+    return Math.round(n).toLocaleString('en-US');
+  }
+  function fmt2(n) {
+    if (!isFinite(n)) return '—';
+    return n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  function pi(loan, rate, n) {
+    if (loan <= 0) return 0;
+    var r = rate / 12;
+    if (r === 0) return loan / n;
+    return loan * (r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
+  }
+
+  var sel = $('citySelect');
+  CITIES.forEach(function(c) {
+    var opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  sel.value = 'clarksville_city';
+
+  var currentCity = CITIES[0];
+  var customRate = 0.0076;
+
+  function updateCityInfo() {
+    currentCity = CITIES.find(function(c) { return c.id === sel.value; });
+    var ci = $('cityInfo');
+    if (currentCity.custom) {
+      ci.innerHTML =
+        '<div style="margin-bottom:8px;">' + currentCity.note + '</div>' +
+        '<div style="position:relative;">' +
+          '<input type="text" id="customTaxRate" value="' + (customRate*100).toFixed(2) + '" inputmode="decimal" style="width:100%;padding:9px 28px 9px 10px;border:1px solid var(--line);background:#fff;font-family:Inter Tight,sans-serif;font-size:14px;-webkit-appearance:none;border-radius:0;">' +
+          '<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;">%</span>' +
+        '</div>';
+      var ctr = $('customTaxRate');
+      ctr.addEventListener('input', function() {
+        customRate = num(ctr.value) / 100;
+        recalc();
+      });
+    } else {
+      ci.innerHTML =
+        '<div>Effective property tax: <span class="ci-rate">' + (currentCity.taxRate*100).toFixed(2) + '% / yr</span></div>' +
+        '<div style="margin-top:4px;">' + currentCity.note + '</div>';
+    }
+  }
+
+  function getTaxRate() {
+    return currentCity.custom ? customRate : currentCity.taxRate;
+  }
+
+  function getVaFee() {
+    return num($('vaFeeSelect').value) / 100;
+  }
+
+  function getVaFeeLabel() {
+    var v = $('vaFeeSelect');
+    return v.options[v.selectedIndex].text;
+  }
+
+  var simpleInputs = ['targetPiti','purchasePrice','convDown','fhaDown','vaDown',
+                      'hoiMonthly','convPmi','fhaMip','fhaUfmip'];
+
+  function getVals() {
+    return {
+      targetPiti: num($('targetPiti').value),
+      price: num($('purchasePrice').value),
+      conv: { rate: RATES.conv, down: num($('convDown').value)/100, pmi: num($('convPmi').value)/100 },
+      fha:  { rate: RATES.fha,  down: num($('fhaDown').value)/100, mip: num($('fhaMip').value)/100, ufmip: num($('fhaUfmip').value)/100 },
+      va:   { rate: RATES.va,   down: num($('vaDown').value)/100, fee: getVaFee() },
+      taxRate: getTaxRate(),
+      hoi: num($('hoiMonthly').value)
+    };
+  }
+
+  function computePayments(price, v) {
+    var taxM = price * v.taxRate / 12;
+    var hoi = v.hoi;
+
+    var convBase = price * (1 - v.conv.down);
+    var convPI = pi(convBase, v.conv.rate, 360);
+    var convPmiM = (v.conv.down < 0.20) ? (convBase * v.conv.pmi / 12) : 0;
+    var convTotal = convPI + convPmiM + taxM + hoi;
+
+    var fhaBase = price * (1 - v.fha.down);
+    var fhaLoan = fhaBase * (1 + v.fha.ufmip);
+    var fhaPI = pi(fhaLoan, v.fha.rate, 360);
+    var fhaMipM = fhaBase * v.fha.mip / 12;
+    var fhaTotal = fhaPI + fhaMipM + taxM + hoi;
+
+    var vaBase = price * (1 - v.va.down);
+    var vaLoan = vaBase * (1 + v.va.fee);
+    var vaPI = pi(vaLoan, v.va.rate, 360);
+    var vaTotal = vaPI + taxM + hoi;
+
+    return {
+      taxM: taxM, hoi: hoi,
+      conv: { down: price*v.conv.down, base: convBase, loan: convBase, pi: convPI, pmi: convPmiM, total: convTotal },
+      fha:  { down: price*v.fha.down,  base: fhaBase,  loan: fhaLoan,  pi: fhaPI,  mip: fhaMipM, total: fhaTotal },
+      va:   { down: price*v.va.down,   base: vaBase,   loan: vaLoan,   pi: vaPI,   total: vaTotal, fee: v.va.fee }
+    };
+  }
+
+  function solveMaxPrice(product, target, v) {
+    var lo = 10000, hi = 5000000;
+    for (var i = 0; i < 70; i++) {
+      var mid = (lo + hi) / 2;
+      var p = computePayments(mid, v);
+      if (p[product].total <= target) lo = mid; else hi = mid;
+    }
+    return lo;
+  }
+
+  var mode = 'piti';
+
+  function renderBreakdown(elId, rows) {
+    var html = rows.map(function(r) {
+      if (r.divider) return '<hr>';
+      var cls = r.muted ? ' muted' : '';
+      var lblCls = r.total ? 'total-lbl' : 'lbl';
+      var valCls = r.total ? ('total-val' + (r.over ? ' over' : '')) : ('val' + cls);
+      return '<div class="' + lblCls + '">' + r.lbl + '</div><div class="' + valCls + '">' + r.val + '</div>';
+    }).join('');
+    $(elId).innerHTML = html;
+  }
+
+  function buildBreakdownRows(productKey, p, v, mode, target) {
+    var prod = p[productKey];
+    var rows = [];
+    function dp(d) { return (d*100).toFixed(d*100 % 1 ? 1 : 0); }
+
+    if (productKey === 'conv') {
+      rows.push({lbl: 'Down payment (' + dp(v.conv.down) + '%)', val: '$' + fmt(prod.down)});
+      rows.push({lbl: 'Loan amount', val: '$' + fmt(prod.loan)});
+      rows.push({divider: true});
+      rows.push({lbl: 'P&I', val: '$' + fmt2(prod.pi)});
+      if (v.conv.down < 0.20) {
+        rows.push({lbl: 'PMI (' + (v.conv.pmi*100).toFixed(2) + '%)', val: '$' + fmt2(prod.pmi)});
+      } else {
+        rows.push({lbl: 'PMI', val: '— none —', muted: true});
+      }
+      rows.push({lbl: 'Property taxes', val: '$' + fmt2(p.taxM)});
+      rows.push({lbl: 'Homeowners ins.', val: '$' + fmt2(p.hoi)});
+    } else if (productKey === 'fha') {
+      rows.push({lbl: 'Down payment (' + dp(v.fha.down) + '%)', val: '$' + fmt(prod.down)});
+      rows.push({lbl: 'Base loan', val: '$' + fmt(prod.base)});
+      rows.push({lbl: 'Loan w/ UFMIP', val: '$' + fmt(prod.loan)});
+      rows.push({divider: true});
+      rows.push({lbl: 'P&I', val: '$' + fmt2(prod.pi)});
+      rows.push({lbl: 'MIP (' + (v.fha.mip*100).toFixed(2) + '%)', val: '$' + fmt2(prod.mip)});
+      rows.push({lbl: 'Property taxes', val: '$' + fmt2(p.taxM)});
+      rows.push({lbl: 'Homeowners ins.', val: '$' + fmt2(p.hoi)});
+    } else if (productKey === 'va') {
+      rows.push({lbl: 'Down payment (' + dp(v.va.down) + '%)', val: '$' + fmt(prod.down)});
+      rows.push({lbl: 'Base loan', val: '$' + fmt(prod.base)});
+      if (v.va.fee > 0) {
+        rows.push({lbl: 'Funding fee (' + (v.va.fee*100).toFixed(2) + '%)', val: '$' + fmt(prod.base * v.va.fee)});
+        rows.push({lbl: 'Loan w/ fee financed', val: '$' + fmt(prod.loan)});
+      } else {
+        rows.push({lbl: 'Funding fee', val: 'Exempt', muted: true});
+      }
+      rows.push({divider: true});
+      rows.push({lbl: 'P&I', val: '$' + fmt2(prod.pi)});
+      rows.push({lbl: 'Property taxes', val: '$' + fmt2(p.taxM)});
+      rows.push({lbl: 'Homeowners ins.', val: '$' + fmt2(p.hoi)});
+      rows.push({lbl: 'Mortgage ins.', val: '— none —', muted: true});
+    }
+    rows.push({divider: true});
+    var over = mode === 'price' && target > 0 && prod.total > target;
+    rows.push({total: true, lbl: 'Total PITI', val: '$' + fmt2(prod.total), over: over});
+    return rows;
+  }
+
+  function recalc() {
+    var v = getVals();
+
+    if (mode === 'piti') {
+      $('resultLabel').textContent = 'Maximum Purchase Price by Loan Type — ' + currentCity.name;
+      $('convAmtLbl').textContent = 'Max Purchase Price';
+      $('fhaAmtLbl').textContent = 'Max Purchase Price';
+      $('vaAmtLbl').textContent = 'Max Purchase Price';
+
+      var target = v.targetPiti;
+      var convMax = solveMaxPrice('conv', target, v);
+      var fhaMax  = solveMaxPrice('fha',  target, v);
+      var vaMax   = solveMaxPrice('va',   target, v);
+
+      $('convAmt').textContent = fmt(convMax);
+      $('fhaAmt').textContent  = fmt(fhaMax);
+      $('vaAmt').textContent   = fmt(vaMax);
+
+      renderBreakdown('convBreakdown', buildBreakdownRows('conv', computePayments(convMax, v), v, mode, target));
+      renderBreakdown('fhaBreakdown',  buildBreakdownRows('fha',  computePayments(fhaMax,  v), v, mode, target));
+      renderBreakdown('vaBreakdown',   buildBreakdownRows('va',   computePayments(vaMax,   v), v, mode, target));
+
+      var candidates = [
+        {key: 'conv', name: 'Conventional', amt: convMax, down: v.conv.down},
+        {key: 'fha',  name: 'FHA',          amt: fhaMax,  down: v.fha.down},
+        {key: 'va',   name: 'VA',           amt: vaMax,   down: v.va.down}
+      ];
+      candidates.sort(function(a, b) { return b.amt - a.amt; });
+      var winner = candidates[0];
+      $('heroLbl').textContent = 'Highest Buying Power';
+      $('heroAmt').textContent = fmt(winner.amt);
+      $('heroRightLbl').textContent = 'at target PITI';
+      $('heroRightAmt').textContent = '$' + fmt(target);
+      $('heroStatus').textContent = winner.name + ' · ' + (winner.down*100).toFixed(winner.down*100%1?1:0) + '% down · ' + currentCity.name.split(' — ')[0];
+
+      ['conv','fha','va'].forEach(function(k) {
+        $('card-'+k).classList.toggle('active', k === winner.key);
+      });
+
+    } else {
+      $('resultLabel').textContent = 'Monthly Payment by Loan Type — ' + currentCity.name;
+      $('convAmtLbl').textContent = 'Monthly Payment';
+      $('fhaAmtLbl').textContent = 'Monthly Payment';
+      $('vaAmtLbl').textContent = 'Monthly Payment';
+
+      var price = v.price;
+      var p = computePayments(price, v);
+
+      $('convAmt').textContent = fmt(p.conv.total);
+      $('fhaAmt').textContent  = fmt(p.fha.total);
+      $('vaAmt').textContent   = fmt(p.va.total);
+
+      renderBreakdown('convBreakdown', buildBreakdownRows('conv', p, v, mode, v.targetPiti));
+      renderBreakdown('fhaBreakdown',  buildBreakdownRows('fha',  p, v, mode, v.targetPiti));
+      renderBreakdown('vaBreakdown',   buildBreakdownRows('va',   p, v, mode, v.targetPiti));
+
+      var candidates2 = [
+        {key: 'conv', name: 'Conventional', amt: p.conv.total, down: v.conv.down},
+        {key: 'fha',  name: 'FHA',          amt: p.fha.total,  down: v.fha.down},
+        {key: 'va',   name: 'VA',           amt: p.va.total,   down: v.va.down}
+      ];
+      candidates2.sort(function(a, b) { return a.amt - b.amt; });
+      var winner2 = candidates2[0];
+      $('heroLbl').textContent = 'Lowest Monthly Payment';
+      $('heroAmt').textContent = fmt(winner2.amt);
+      $('heroRightLbl').textContent = 'on purchase of';
+      $('heroRightAmt').textContent = '$' + fmt(price);
+      $('heroStatus').textContent = winner2.name + ' · ' + (winner2.down*100).toFixed(winner2.down*100%1?1:0) + '% down · ' + currentCity.name.split(' — ')[0];
+
+      ['conv','fha','va'].forEach(function(k) {
+        $('card-'+k).classList.toggle('active', k === winner2.key);
+      });
+    }
+  }
+
+  function attachCommaFormatter(id) {
+    var el = $(id);
+    el.addEventListener('blur', function() {
+      var n = num(el.value);
+      if (n > 0) el.value = n.toLocaleString('en-US');
+    });
+    el.addEventListener('focus', function() {
+      el.value = String(num(el.value) || '');
+    });
+  }
+  attachCommaFormatter('targetPiti');
+  attachCommaFormatter('purchasePrice');
+  attachCommaFormatter('hoiMonthly');
+
+  simpleInputs.forEach(function(id) {
+    $(id).addEventListener('input', recalc);
+    $(id).addEventListener('change', recalc);
+  });
+
+  $('vaFeeSelect').addEventListener('change', recalc);
+
+  sel.addEventListener('change', function() {
+    updateCityInfo();
+    recalc();
+  });
+
+  $('mode-piti').addEventListener('click', function() {
+    mode = 'piti';
+    $('mode-piti').classList.add('active');
+    $('mode-price').classList.remove('active');
+    $('field-piti').style.display = '';
+    $('field-price').style.display = 'none';
+    recalc();
+  });
+  $('mode-price').addEventListener('click', function() {
+    mode = 'price';
+    $('mode-price').classList.add('active');
+    $('mode-piti').classList.remove('active');
+    $('field-piti').style.display = 'none';
+    $('field-price').style.display = '';
+    recalc();
+  });
+
+  updateCityInfo();
+  recalc();
+
+  // PWA: Register service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('sw.js').catch(function(err) {
+        console.log('SW registration failed:', err);
+      });
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
