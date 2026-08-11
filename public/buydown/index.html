@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steadfast Mortgage — Buydown Scenario Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1F3A5F;
+    --navy-dark: #142745;
+    --navy-light: #2E4E7C;
+    --accent: #2E75B6;
+    --bg: #FAFBFC;
+    --surface: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #1A1F2E;
+    --text-muted: #6B7280;
+    --highlight: #FFF2CC;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(31, 58, 95, 0.08);
+    --shadow-lg: 0 12px 32px rgba(31, 58, 95, 0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+  header { background: rgba(255,255,255,0.95); border-bottom: 1px solid var(--border); padding: 20px 0; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .logo { height: 38px; width: auto; }
+  .header-text { display: flex; flex-direction: column; align-items: flex-end; }
+  .header-text .title { font-family: 'Fraunces', serif; font-weight: 600; color: var(--navy); font-size: 15px; letter-spacing: -0.01em; }
+  .header-text .subtitle { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .hero { padding: 64px 0 40px; text-align: center; }
+  .hero h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: clamp(36px, 5vw, 56px); color: var(--navy); line-height: 1.05; letter-spacing: -0.02em; max-width: 760px; margin: 0 auto 20px; }
+  .hero h1 em { font-style: italic; color: var(--accent); font-weight: 500; }
+  .hero p { font-size: 17px; color: var(--text-muted); max-width: 580px; margin: 0 auto; }
+
+  .main { display: grid; grid-template-columns: 380px 1fr; gap: 32px; padding: 24px 0 80px; align-items: start; }
+  @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--surface); border-radius: 16px; padding: 28px; box-shadow: var(--shadow-md); border: 1px solid var(--border); position: sticky; top: 96px; }
+  @media (max-width: 900px) { .panel { position: static; } }
+  .panel h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .panel .panel-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .field input, .field select { width: 100%; padding: 12px 14px; font-family: inherit; font-size: 15px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); transition: all 0.15s; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.15); }
+  .field-with-prefix { position: relative; }
+  .field-with-prefix .prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; pointer-events: none; }
+  .field-with-prefix input { padding-left: 30px; }
+
+  .btn-primary { width: 100%; padding: 14px; background: var(--navy); color: white; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.01em; box-shadow: var(--shadow-sm); }
+  .btn-primary:hover { background: var(--navy-dark); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary { width: 100%; padding: 12px; background: var(--surface); color: var(--navy); border: 1.5px solid var(--navy); border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; margin-top: 10px; }
+  .btn-secondary:hover { background: var(--navy); color: white; }
+
+  .results { min-height: 200px; }
+  .results-empty { text-align: center; padding: 80px 32px; background: var(--surface); border-radius: 16px; border: 1.5px dashed var(--border); }
+  .results-empty .icon { width: 56px; height: 56px; margin: 0 auto 16px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent); font-family: 'Fraunces', serif; font-size: 28px; font-weight: 500; }
+  .results-empty h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; color: var(--navy); margin-bottom: 6px; }
+  .results-empty p { color: var(--text-muted); font-size: 14px; }
+
+  .results-content { display: none; }
+  .results-content.active { display: block; }
+
+  .property-summary { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); color: white; padding: 28px; border-radius: 16px; margin-bottom: 24px; box-shadow: var(--shadow-md); }
+  .property-summary .label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; opacity: 0.85; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+  .property-summary h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 28px; line-height: 1.15; letter-spacing: -0.01em; }
+  .property-summary .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 22px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.15); }
+  .property-summary .meta-label { font-size: 11px; opacity: 0.7; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; margin-bottom: 4px; }
+  .property-summary .meta-value { font-family: 'Fraunces', serif; font-weight: 500; font-size: 22px; letter-spacing: -0.01em; }
+
+  .allocation { background: var(--surface); border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+  .allocation h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; color: var(--navy); margin-bottom: 16px; }
+  .alloc-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .alloc-row:last-child { border-bottom: none; font-weight: 600; padding-top: 16px; }
+  .alloc-row .amount { font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px; color: var(--navy); }
+
+  .options-section { margin-top: 32px; }
+  .section-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; color: var(--navy); margin-bottom: 6px; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .section-title .pill { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; background: var(--bg); color: var(--text-muted); padding: 4px 10px; border-radius: 100px; letter-spacing: 0.05em; }
+  .section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
+
+  .option-card { background: var(--surface); border-radius: 14px; padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: all 0.2s; }
+  .option-card:hover { box-shadow: var(--shadow-md); border-color: rgba(46, 117, 182, 0.3); }
+  .option-card.recommended { border: 2px solid var(--accent); position: relative; }
+  .option-card.recommended::before { content: 'RECOMMENDED'; position: absolute; top: -10px; left: 20px; background: var(--accent); color: white; padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+
+  .option-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; gap: 16px; }
+  .option-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; color: var(--navy); letter-spacing: -0.01em; }
+  .option-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .option-piti { text-align: right; flex-shrink: 0; }
+  .option-piti .label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+  .option-piti .value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 28px; color: var(--navy); letter-spacing: -0.02em; line-height: 1; }
+  .option-piti .value-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .option-stat .label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; margin-bottom: 3px; }
+  .option-stat .value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .buydown-schedule { margin-top: 16px; padding: 14px 16px; background: var(--bg); border-radius: 10px; }
+  .buydown-schedule .schedule-title { font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .schedule-rows { display: grid; gap: 8px; }
+  .schedule-row { display: grid; grid-template-columns: 80px 1fr 1fr; gap: 12px; font-size: 13px; align-items: center; }
+  .schedule-row .period { font-weight: 600; color: var(--navy); }
+  .schedule-row .rate { color: var(--text-muted); }
+  .schedule-row .piti { font-family: 'Fraunces', serif; font-weight: 600; text-align: right; color: var(--text); }
+
+  .disclaimers { background: var(--surface); border-radius: 14px; padding: 24px; margin-top: 32px; border: 1px solid var(--border); font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .disclaimers h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 14px; color: var(--navy); margin-bottom: 10px; }
+  .disclaimers ul { padding-left: 18px; }
+  .disclaimers li { margin-bottom: 4px; }
+
+  footer { background: var(--navy); color: white; padding: 40px 0; margin-top: 80px; }
+  footer .container { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+  footer .footer-brand { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+  footer .footer-contact { font-size: 13px; opacity: 0.85; line-height: 1.7; }
+  footer .footer-contact a { color: white; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.3); }
+  footer .footer-contact a:hover { border-color: white; }
+  footer .footer-legal { font-size: 11px; opacity: 0.6; margin-top: 12px; line-height: 1.6; max-width: 380px; }
+
+  @media print {
+    header, .hero, .panel, footer { display: none; }
+    body { background: white; }
+    .main { grid-template-columns: 1fr; padding: 0; }
+    .option-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    .property-summary { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .results-content.active .property-summary, .results-content.active .allocation, .results-content.active .options-section, .results-content.active .disclaimers { animation: fadeUp 0.4s ease-out backwards; }
+  .results-content.active .allocation { animation-delay: 0.05s; }
+  .results-content.active .options-section { animation-delay: 0.1s; }
+  .results-content.active .disclaimers { animation-delay: 0.15s; }
+
+  .error-msg { color: #DC2626; font-size: 12px; margin-top: 6px; display: none; }
+  .error-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container header-row">
+    <img class="logo" src="data:image/png;base64,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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAJBG7oN3QCQRu6Dd0AkEbug3dAP/Z" alt="Steadfast Mortgage">
+    <div class="header-text">
+      <div class="title">Buydown Scenario Tool</div>
+      <div class="subtitle">For partnering real estate agents</div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Quick financing <em>scenarios</em> for your buyers.</h1>
+    <p>Enter a property and seller credit to see real-time VA and conventional buydown options structured at Steadfast Mortgage rates.</p>
+  </div>
+</section>
+
+<div class="container main">
+  <aside class="panel">
+    <h2>Property Inputs</h2>
+    <p class="panel-sub">All fields required</p>
+
+    <div class="field">
+      <label for="address">Property Address</label>
+      <input type="text" id="address" placeholder="123 Main St, Clarksville, TN" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="agent">Listing Agent</label>
+      <input type="text" id="agent" placeholder="Agent name" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="price">Purchase Price</label>
+      <div class="field-with-prefix">
+        <span class="prefix">$</span>
+        <input type="text" id="price" placeholder="399,900" inputmode="numeric">
+      </div>
+      <div class="error-msg" id="price-error">Enter a valid purchase price</div>
+    </div>
+
+    <div class="field">
+      <label for="credit">Seller Credit</label>
+      <div class="field-with-prefix">
+        <span class="prefix">$</span>
+        <input type="text" id="credit" placeholder="25,000" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="tax">Tax Jurisdiction</label>
+      <select id="tax">
+        <optgroup label="Tennessee">
+          <option value="mont-county">Montgomery County only, TN</option>
+          <option value="clarksville">Clarksville (city + Montgomery County), TN</option>
+          <option value="cheatham">Cheatham County, TN</option>
+          <option value="stewart">Stewart County (outside Dover), TN</option>
+          <option value="dover">Dover (city + Stewart County), TN</option>
+        </optgroup>
+        <optgroup label="Kentucky">
+          <option value="hopkinsville">Hopkinsville (Christian County), KY</option>
+          <option value="oakgrove">Oak Grove (Christian County), KY</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="calculate()">Calculate Scenarios</button>
+    <button class="btn-secondary" onclick="window.print()" id="print-btn" style="display:none;">Print / Save as PDF</button>
+  </aside>
+
+  <main class="results">
+    <div class="results-empty" id="empty-state">
+      <div class="icon">$</div>
+      <h3>Ready when you are</h3>
+      <p>Fill in the property details and we'll run the numbers for VA and conventional buydown scenarios.</p>
+    </div>
+
+    <div class="results-content" id="results"></div>
+  </main>
+</div>
+
+<footer>
+  <div class="container">
+    <div>
+      <div class="footer-brand">Steadfast Mortgage</div>
+      <div class="footer-legal">
+        NMLS# 1131833 · Equal Housing Lender<br>
+        Pricing illustrative, not a commitment to lend. All quotes subject to credit approval and rate lock confirmation.
+      </div>
+    </div>
+    <div class="footer-contact">
+      <strong>Matt McWhirter</strong> · Sr. Loan Advisor / Partner · NMLS# 874403<br>
+      <a href="tel:9312209752">931.220.9752</a> · <a href="mailto:matt.mcwhirter@steadfastmortgage.com">matt.mcwhirter@steadfastmortgage.com</a><br>
+      321 N Spring St, Clarksville, TN 37040
+    </div>
+  </div>
+</footer>
+
+<script>
+const VA_CHART = [
+  [4.250, 91.571], [4.375, 92.380], [4.500, 92.998], [4.625, 93.667],
+  [4.750, 95.501], [4.875, 95.845], [4.990, 96.311], [5.000, 96.359],
+  [5.125, 96.906], [5.250, 98.314], [5.375, 98.696],
+  [5.490, 99.016], [5.500, 99.107], [5.625, 99.622],
+  [5.750, 100.514], [5.875, 100.701], [5.990, 101.175], [6.000, 101.216],
+  [6.125, 101.785], [6.250, 102.287]
+];
+
+const CONV_CHART = [
+  [4.250, 89.171], [4.375, 89.852], [4.500, 90.532], [4.625, 91.166],
+  [4.750, 92.309], [4.875, 93.004], [4.990, 93.626], [5.000, 94.332],
+  [5.125, 95.074], [5.250, 95.694], [5.375, 96.314],
+  [5.490, 96.276], [5.500, 96.934],
+  [5.750, 97.452], [5.865, 97.902],
+  [5.990, 98.391], [6.000, 98.857], [6.115, 99.002],
+  [6.124, 99.274], [6.125, 99.584], [6.250, 100.214], [6.375, 100.942],
+  [6.490, 101.262], [6.500, 101.577], [6.625, 102.060], [6.750, 102.450]
+];
+
+function pi(loan, rate, n) {
+  n = n || 360;
+  const r = rate/12;
+  return loan * r / (1 - Math.pow(1+r, -n));
+}
+
+function fmtMoney(n) { return '$' + Math.round(n).toLocaleString(); }
+function fmtMoneyFull(n) { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+function estimateInsurance(price) {
+  if (price <= 400000) return 135;
+  if (price <= 500000) return 150;
+  return 160;
+}
+
+// Tax jurisdiction definitions
+// TN: assessed at 25% of value, rate per $100
+// KY: assessed at 100% of value, effective rate
+// Effective annual tax / purchase price -> ratio for monthly calc
+const JURISDICTIONS = {
+  'mont-county': { state: 'TN', label: 'Montgomery County only, TN', method: 'TN', rate: 2.10, description: 'Montgomery County ($2.10/$100, 25% assessment ratio)' },
+  'clarksville': { state: 'TN', label: 'Clarksville + Montgomery County, TN', method: 'TN', rate: 3.02, description: 'Clarksville city + Montgomery County (combined $3.02/$100, 25% assessment ratio)' },
+  'cheatham': { state: 'TN', label: 'Cheatham County, TN', method: 'TN', rate: 1.5915, description: 'Cheatham County ($1.5915/$100, 25% assessment ratio, 2025-26 rate)' },
+  'stewart': { state: 'TN', label: 'Stewart County, TN', method: 'TN', rate: 2.3607, description: 'Stewart County ($2.3607/$100, 25% assessment ratio)' },
+  'dover': { state: 'TN', label: 'Dover + Stewart County, TN', method: 'TN', rate: 3.6607, description: 'Dover city + Stewart County (combined $3.6607/$100, 25% assessment ratio)' },
+  'hopkinsville': { state: 'KY', label: 'Hopkinsville (Christian County), KY', method: 'KY', effectiveRate: 0.0078, description: 'Hopkinsville/Christian County KY (~0.78% effective; KY assesses at 100% of value with stacked city+county+school rates)' },
+  'oakgrove': { state: 'KY', label: 'Oak Grove (Christian County), KY', method: 'KY', effectiveRate: 0.0086, description: 'Oak Grove/Christian County KY (~0.86% effective; KY assesses at 100% of value with stacked city+county+school rates)' }
+};
+
+function calcEscrow(price, jurisdictionKey) {
+  const j = JURISDICTIONS[jurisdictionKey] || JURISDICTIONS['mont-county'];
+  let annualTax;
+  if (j.method === 'TN') {
+    // Tennessee: 25% × rate/$100
+    annualTax = price * 0.25 * (j.rate / 100);
+  } else {
+    // Kentucky: effective rate on full value
+    annualTax = price * j.effectiveRate;
+  }
+  const monthlyTax = annualTax / 12;
+  const ins = estimateInsurance(price);
+  return { monthlyTax: monthlyTax, ins: ins, total: monthlyTax + ins, jurisdiction: j, annualTax: annualTax };
+}
+
+function findPermBuydown(chart, loan, budget) {
+  const ptsAvail = budget / loan * 100;
+  let best = null;
+  for (let i = 0; i < chart.length; i++) {
+    const rate = chart[i][0];
+    const price = chart[i][1];
+    const net = price + ptsAvail;
+    if (net >= 102.0 && net <= 102.5) {
+      if (best === null || rate < best.rate) {
+        best = { rate: rate, price: price, ptsAvail: ptsAvail, ptsCost: budget, net: net };
+      }
+    }
+  }
+  if (best) return best;
+  for (let i = 0; i < chart.length; i++) {
+    const rate = chart[i][0];
+    const price = chart[i][1];
+    const net = price + ptsAvail;
+    if (net > 102.5 && net <= 102.65) {
+      if (best === null || rate < best.rate) {
+        best = { rate: rate, price: price, ptsAvail: ptsAvail, ptsCost: budget, net: net, overshoot: true };
+      }
+    }
+  }
+  if (best) return best;
+  for (let i = 0; i < chart.length; i++) {
+    const rate = chart[i][0];
+    const price = chart[i][1];
+    const net = price + ptsAvail;
+    if (net >= 101.5 && net < 102.0) {
+      if (best === null || rate < best.rate) {
+        best = { rate: rate, price: price, ptsAvail: ptsAvail, ptsCost: budget, net: net, undershoot: true };
+      }
+    }
+  }
+  return best;
+}
+
+function findCombinedBuydown(chart, loan, budget, tempType) {
+  let best = null;
+  for (let pass = 0; pass < 2; pass++) {
+    const maxNet = pass === 0 ? 102.5 : 102.65;
+    for (let i = 0; i < chart.length; i++) {
+      const rate = chart[i][0];
+      const price = chart[i][1];
+      let tempCost;
+      if (tempType === '2/1') {
+        const y1 = (pi(loan, rate/100) - pi(loan, (rate-2)/100)) * 12;
+        const y2 = (pi(loan, rate/100) - pi(loan, (rate-1)/100)) * 12;
+        tempCost = y1 + y2;
+      } else {
+        tempCost = (pi(loan, rate/100) - pi(loan, (rate-1)/100)) * 12;
+      }
+      if (tempCost > budget) continue;
+      const remaining = budget - tempCost;
+      const ptsPct = remaining / loan * 100;
+      const net = price + ptsPct;
+      if (net >= 102.0 && net <= maxNet) {
+        if (best === null || rate < best.rate) {
+          best = { rate: rate, price: price, tempCost: tempCost, permPts: remaining, permPctOfLoan: ptsPct, net: net, tempType: tempType, overshoot: pass === 1 };
+        }
+      }
+    }
+    if (best) return best;
+  }
+  return null;
+}
+
+function calculate() {
+  const address = document.getElementById('address').value.trim() || 'Property';
+  const agent = document.getElementById('agent').value.trim() || 'Agent';
+  const priceStr = document.getElementById('price').value.replace(/[^0-9.]/g, '');
+  const creditStr = document.getElementById('credit').value.replace(/[^0-9.]/g, '');
+  const jurisdictionKey = document.getElementById('tax').value;
+
+  const price = parseFloat(priceStr);
+  const credit = parseFloat(creditStr) || 0;
+
+  const priceError = document.getElementById('price-error');
+  if (!price || price < 50000) {
+    priceError.classList.add('show');
+    return;
+  }
+  priceError.classList.remove('show');
+
+  const closingCostPct = price <= 400000 ? 0.0325 : 0.030;
+  const closingCosts = price * closingCostPct;
+  const budget = Math.max(0, credit - closingCosts);
+  const escrow = calcEscrow(price, jurisdictionKey);
+  const ti = escrow.total;
+
+  const vaLoan = Math.round(price * 1.0215);
+  const fundingFee = price * 0.0215;
+  const convLoan = Math.round(price * 0.80);
+  const downPayment = price - convLoan;
+  const convConcessionCap = price * 0.09;
+
+  const vaPerm = findPermBuydown(VA_CHART, vaLoan, budget);
+  let vaCombined = findCombinedBuydown(VA_CHART, vaLoan, budget, '2/1');
+  let vaCombinedTempType = '2/1';
+  if (!vaCombined) {
+    vaCombined = findCombinedBuydown(VA_CHART, vaLoan, budget, '1/0');
+    vaCombinedTempType = '1/0';
+  }
+  const convPerm = findPermBuydown(CONV_CHART, convLoan, budget);
+  const convCombined = findCombinedBuydown(CONV_CHART, convLoan, budget, '2/1');
+
+  const armRate = 0.0625;
+  const armPI = pi(vaLoan, armRate);
+  const armPITI = armPI + ti;
+
+  renderResults({
+    address: address, agent: agent, price: price, credit: credit, jurisdictionKey: jurisdictionKey,
+    closingCostPct: closingCostPct, closingCosts: closingCosts, budget: budget,
+    escrow: escrow, ti: ti,
+    vaLoan: vaLoan, fundingFee: fundingFee,
+    convLoan: convLoan, downPayment: downPayment, convConcessionCap: convConcessionCap,
+    vaPerm: vaPerm, vaCombined: vaCombined, vaCombinedTempType: vaCombinedTempType,
+    convPerm: convPerm, convCombined: convCombined,
+    armRate: armRate, armPI: armPI, armPITI: armPITI
+  });
+}
+
+function renderResults(r) {
+  const taxDesc = r.escrow.jurisdiction.description;
+  const jurisdictionLabel = r.escrow.jurisdiction.label;
+  const concessionWarning = r.credit > r.convConcessionCap
+    ? '<strong style="color: #DC2626;">— full seller credit may not fit; confirm structure.</strong>'
+    : '✓ full credit fits within cap.';
+
+  const html =
+    '<div class="property-summary">' +
+      '<div class="label-row">Financing Scenarios for</div>' +
+      '<h2>' + escapeHtml(r.address) + '</h2>' +
+      '<div class="meta-grid">' +
+        '<div><div class="meta-label">Purchase Price</div><div class="meta-value">' + fmtMoneyFull(r.price) + '</div></div>' +
+        '<div><div class="meta-label">Seller Credit</div><div class="meta-value">' + fmtMoneyFull(r.credit) + '</div></div>' +
+        '<div><div class="meta-label">Listing Agent</div><div class="meta-value" style="font-size: 18px;">' + escapeHtml(r.agent) + '</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="allocation">' +
+      '<h3>Seller Credit Allocation</h3>' +
+      '<div class="alloc-row"><span>Estimated closing costs + prepaids (' + (r.closingCostPct*100).toFixed(2) + '%)</span><span class="amount">' + fmtMoney(r.closingCosts) + '</span></div>' +
+      '<div class="alloc-row"><span>Available for rate buydown</span><span class="amount" style="color: var(--accent);">' + fmtMoney(r.budget) + '</span></div>' +
+      '<div class="alloc-row"><span>Total seller credit</span><span class="amount">' + fmtMoneyFull(r.credit) + '</span></div>' +
+    '</div>' +
+
+    '<div class="allocation" style="background: var(--bg); border: 1px solid var(--border);">' +
+      '<h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em;">Estimated Escrow (T&amp;I)</h3>' +
+      '<div class="alloc-row" style="border: none; padding: 8px 0;"><span style="font-size: 13px; color: var(--text-muted);">Property tax (' + jurisdictionLabel + ')</span><span style="font-size: 14px; font-weight: 600;">' + fmtMoney(r.escrow.monthlyTax) + '/mo</span></div>' +
+      '<div class="alloc-row" style="border: none; padding: 8px 0;"><span style="font-size: 13px; color: var(--text-muted);">Homeowners insurance (estimate)</span><span style="font-size: 14px; font-weight: 600;">' + fmtMoney(r.escrow.ins) + '/mo</span></div>' +
+      '<div class="alloc-row" style="padding-top: 12px;"><span style="font-size: 13px;">Total monthly escrow</span><span class="amount" style="font-size: 16px;">' + fmtMoney(r.ti) + '/mo</span></div>' +
+    '</div>' +
+
+    '<div class="options-section">' +
+      '<div class="section-title">VA Loan Options <span class="pill">0% DOWN · ' + fmtMoneyFull(r.vaLoan) + ' LOAN</span></div>' +
+      '<div class="section-sub">Purchase price + 2.15% VA funding fee (' + fmtMoney(r.fundingFee) + ') financed into loan. Funding fee waived if buyer has VA disability rating of 10%+.</div>' +
+      renderPermOption('VA Permanent Rate Buydown', r.vaPerm, r.vaLoan, r.ti, true) +
+      renderCombinedOption('VA ' + r.vaCombinedTempType + ' + Permanent Buydown', r.vaCombined, r.vaLoan, r.ti) +
+      renderArmOption('VA 5/1 Hybrid ARM', r.armRate, r.armPI, r.armPITI) +
+    '</div>' +
+
+    '<div class="options-section">' +
+      '<div class="section-title">Conventional Options <span class="pill">20% DOWN · ' + fmtMoneyFull(r.convLoan) + ' LOAN</span></div>' +
+      '<div class="section-sub">Down payment ' + fmtMoneyFull(r.downPayment) + '. No PMI. Seller concession cap (9% = ' + fmtMoneyFull(r.convConcessionCap) + ') ' + concessionWarning + '</div>' +
+      renderPermOption('Conventional Permanent Rate Buydown', r.convPerm, r.convLoan, r.ti, true) +
+      renderCombinedOption('Conventional 2/1 + Permanent Buydown', r.convCombined, r.convLoan, r.ti) +
+    '</div>' +
+
+    '<div class="disclaimers">' +
+      '<h4>Notes &amp; Disclaimers</h4>' +
+      '<ul>' +
+        '<li>All pricing sourced from Optimal Blue rate sheet, 30-day lock period. Rates subject to change at lock.</li>' +
+        '<li>Pricing assumes FICO 760-779, escrows waived (TN). Final pricing dependent on full application.</li>' +
+        '<li>Property tax based on ' + taxDesc + '. Final taxes vary by parcel; verify on Loan Estimate.</li>' +
+        '<li>Homeowners insurance estimated; final quote required from carrier.</li>' +
+        '<li>Permanent buydown costs calculated as percentage of loan amount (1 point = 1% of loan).</li>' +
+        '<li>Temporary buydown costs are escrow-funded; unused funds apply to principal upon refinance or sale.</li>' +
+        '<li>Pre-approval required to confirm exact rate, payment, and program eligibility.</li>' +
+        '<li>This is an illustrative scenario worksheet, not a commitment to lend or a Loan Estimate.</li>' +
+      '</ul>' +
+    '</div>';
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.innerHTML = html;
+  resultsEl.classList.add('active');
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('print-btn').style.display = 'block';
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPermOption(title, opt, loan, ti, recommended) {
+  if (!opt) {
+    return '<div class="option-card"><div class="option-title">' + title + '</div><div class="option-sub" style="margin-top: 8px; color: #DC2626;">No feasible rate found within target margin at current pricing. Contact Matt directly.</div></div>';
+  }
+  const PI = pi(loan, opt.rate/100);
+  const PITI = PI + ti;
+  let note = '';
+  if (opt.overshoot) note = '<div class="option-sub" style="color: var(--accent);">Lender net slightly over target (' + opt.net.toFixed(3) + ')</div>';
+  else if (opt.undershoot) note = '<div class="option-sub">Slight margin gap (net ' + opt.net.toFixed(3) + '); partial budget use</div>';
+
+  return '<div class="option-card' + (recommended ? ' recommended' : '') + '">' +
+    '<div class="option-header">' +
+      '<div>' +
+        '<div class="option-title">' + title + ' @ ' + opt.rate.toFixed(3) + '%</div>' +
+        '<div class="option-sub">' + opt.ptsAvail.toFixed(3) + '% in discount points (' + fmtMoney(opt.ptsCost) + ') · seller-paid · permanent for life of loan</div>' +
+        note +
+      '</div>' +
+      '<div class="option-piti">' +
+        '<div class="label">Monthly PITI</div>' +
+        '<div class="value">' + fmtMoney(PITI) + '</div>' +
+        '<div class="value-sub">P&amp;I ' + fmtMoney(PI) + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="option-grid">' +
+      '<div class="option-stat"><div class="label">Note Rate</div><div class="value">' + opt.rate.toFixed(3) + '%</div></div>' +
+      '<div class="option-stat"><div class="label">Points Charged</div><div class="value">' + opt.ptsAvail.toFixed(3) + '%</div></div>' +
+      '<div class="option-stat"><div class="label">Buydown Cost</div><div class="value">' + fmtMoney(opt.ptsCost) + '</div></div>' +
+      '<div class="option-stat"><div class="label">PMI / MI</div><div class="value">$0</div></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderCombinedOption(title, opt, loan, ti) {
+  if (!opt) {
+    return '<div class="option-card"><div class="option-title">' + title + '</div><div class="option-sub" style="margin-top: 8px;">Buydown structure not feasible at this purchase price within available budget. Contact Matt for alternatives.</div></div>';
+  }
+  const PI_note = pi(loan, opt.rate/100);
+  const PITI_note = PI_note + ti;
+  const isOneZero = opt.tempType === '1/0';
+
+  const y1Rate = opt.rate - 2;
+  const y2Rate = opt.rate - 1;
+
+  const PI_y1 = isOneZero ? pi(loan, y2Rate/100) : pi(loan, y1Rate/100);
+  const PI_y2 = isOneZero ? PI_note : pi(loan, y2Rate/100);
+  const PITI_y1 = PI_y1 + ti;
+  const PITI_y2 = PI_y2 + ti;
+
+  let scheduleRows;
+  if (isOneZero) {
+    scheduleRows =
+      '<div class="schedule-row"><div class="period">Year 1</div><div class="rate">' + y2Rate.toFixed(3) + '%</div><div class="piti">' + fmtMoney(PITI_y1) + '</div></div>' +
+      '<div class="schedule-row"><div class="period">Year 2+</div><div class="rate">' + opt.rate.toFixed(3) + '%</div><div class="piti">' + fmtMoney(PITI_note) + '</div></div>';
+  } else {
+    scheduleRows =
+      '<div class="schedule-row"><div class="period">Year 1</div><div class="rate">' + y1Rate.toFixed(3) + '%</div><div class="piti">' + fmtMoney(PITI_y1) + '</div></div>' +
+      '<div class="schedule-row"><div class="period">Year 2</div><div class="rate">' + y2Rate.toFixed(3) + '%</div><div class="piti">' + fmtMoney(PITI_y2) + '</div></div>' +
+      '<div class="schedule-row"><div class="period">Year 3+</div><div class="rate">' + opt.rate.toFixed(3) + '%</div><div class="piti">' + fmtMoney(PITI_note) + '</div></div>';
+  }
+
+  return '<div class="option-card">' +
+    '<div class="option-header">' +
+      '<div>' +
+        '<div class="option-title">' + title + '</div>' +
+        '<div class="option-sub">Note rate ' + opt.rate.toFixed(3) + '% · ' + (isOneZero ? '1/0' : '2/1') + ' temp buydown + permanent reduction</div>' +
+      '</div>' +
+      '<div class="option-piti">' +
+        '<div class="label">Year 1 PITI</div>' +
+        '<div class="value">' + fmtMoney(PITI_y1) + '</div>' +
+        '<div class="value-sub">→ ' + fmtMoney(PITI_note) + ' permanent</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="option-grid">' +
+      '<div class="option-stat"><div class="label">Temp Buydown Cost</div><div class="value">' + fmtMoney(opt.tempCost) + '</div></div>' +
+      '<div class="option-stat"><div class="label">Permanent Pts</div><div class="value">' + fmtMoney(opt.permPts) + '</div></div>' +
+      '<div class="option-stat"><div class="label">Total Investment</div><div class="value">' + fmtMoney(opt.tempCost + opt.permPts) + '</div></div>' +
+    '</div>' +
+    '<div class="buydown-schedule">' +
+      '<div class="schedule-title">Payment Schedule</div>' +
+      '<div class="schedule-rows">' + scheduleRows + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderArmOption(title, rate, PI, PITI) {
+  return '<div class="option-card">' +
+    '<div class="option-header">' +
+      '<div>' +
+        '<div class="option-title">' + title + '</div>' +
+        '<div class="option-sub">Initial rate fixed 5 years · Index GNMA II · 2.00% margin · Annual adjust after Yr 5</div>' +
+      '</div>' +
+      '<div class="option-piti">' +
+        '<div class="label">Years 1-5 PITI</div>' +
+        '<div class="value">' + fmtMoney(PITI) + '</div>' +
+        '<div class="value-sub">P&amp;I ' + fmtMoney(PI) + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="option-grid">' +
+      '<div class="option-stat"><div class="label">Initial Rate</div><div class="value">' + (rate*100).toFixed(3) + '%</div></div>' +
+      '<div class="option-stat"><div class="label">Fixed Period</div><div class="value">5 years</div></div>' +
+      '<div class="option-stat"><div class="label">Best For</div><div class="value">Short-term hold</div></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// Auto-format currency
+['price', 'credit'].forEach(function(id) {
+  const el = document.getElementById(id);
+  el.addEventListener('input', function(e) {
+    const raw = e.target.value.replace(/[^0-9]/g, '');
+    if (raw) e.target.value = parseInt(raw).toLocaleString();
+  });
+});
+
+document.querySelectorAll('input').forEach(function(input) {
+  input.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') calculate();
+  });
+});
+</script>
+</body>
+</html>
